@@ -30,11 +30,14 @@ class AdRILWrapper(gym.Env):
     self.observation_space = self.base_env.observation_space
     self.action_space = self.base_env.action_space
     self.trajs = list()
+    self.num_trajs = 0
     self.curr_state = None
   def step(self, action):
     next_obs, _, done, info = self.base_env.step(action)
     reward = self.iter # Transformed by replay buffer
     self.trajs.append((self.curr_state, action, next_obs, done))
+    if done:
+        self.num_trajs += 1
     self.curr_state = next_obs
     return next_obs, reward, done, info
   def reset(self):
@@ -49,8 +52,7 @@ class AdRILWrapper(gym.Env):
     return self.trajs
   def set_iter(self, k):
     self.iter = k
-
-
+    
 class AdRILReplayBuffer(ReplayBuffer):
     def __init__(
         self,
@@ -61,6 +63,7 @@ class AdRILReplayBuffer(ReplayBuffer):
         n_envs: int = 1,
         optimize_memory_usage: bool = False,
         expert_data: dict = dict(),
+            N_expert: int = 0,
         balanced: bool = True,
     ):
         super(AdRILReplayBuffer, self).__init__(buffer_size, observation_space, action_space, device, n_envs=n_envs, optimize_memory_usage=optimize_memory_usage)
@@ -71,6 +74,8 @@ class AdRILReplayBuffer(ReplayBuffer):
         self.expert_dones = expert_data['dones']
         n_expert = len(expert_data["obs"])
         self.iter = 0
+        self.N_expert = N_expert
+        self.N_learner = 0
         self.normalizer = 1
         self.balanced = balanced
 
@@ -78,8 +83,11 @@ class AdRILReplayBuffer(ReplayBuffer):
       self.iter = k
       normalizer = 0
       for i in range(0, k):
-        normalizer += 1 ** (-i)
+        normalizer += 1 ** (-i) # written to support decaying learning rate
       self.normalizer = normalizer
+
+    def set_n_learner(self, n):
+        self.N_learner = n
 
     def _get_samples(self, batch_inds: np.ndarray, env: Optional[VecNormalize] = None) -> ReplayBufferSamples:
         num_samples = len(batch_inds)
@@ -96,17 +104,20 @@ class AdRILReplayBuffer(ReplayBuffer):
           obs = self._normalize_obs(self.observations[batch_inds, 0, :], env)
           obs = np.concatenate((obs, self._normalize_obs(self.expert_states[expert_inds], env)), axis=0)
           actions = self.actions[batch_inds, 0, :]
-          actions = np.concatenate((actions, self.expert_actions[expert_inds].reshape(num_expert_samples, -1)), axis=0)        
+          actions = np.concatenate((actions, self.expert_actions[expert_inds].reshape(num_expert_samples, -1)), axis=0)
           dones = self.dones[batch_inds]
           dones = np.concatenate((dones, self.expert_dones[expert_inds].reshape(num_expert_samples, -1)), axis=0)
           # AdRIL Rewards (indicator kernel)
           mask1 = (self.rewards[batch_inds] >= 0).astype(np.float32)
           mask2 = (self.rewards[batch_inds] < self.iter).astype(np.float32)
-          r1 = - (1. ** (-self.rewards[batch_inds]) / self.normalizer) * mask1 * mask2 # Past iter
+          r1 = - (1. ** (-self.rewards[batch_inds])) * mask1 * mask2 # Past iter
           r2 = np.zeros_like(self.rewards[batch_inds]) * mask1 * (1 - mask2) # current iter
           r3 = -self.rewards[batch_inds] * (1 - mask1) # Expert
-          rewards = r1 + r2 + r3
-          rewards = np.concatenate((rewards, np.ones_like(rewards)), axis=0)
+          if self.iter > 0:
+              rewards = (r1 / self.N_learner) + r2 + r3
+          else:
+              rewards = r1 + r2 + r3
+          rewards = np.concatenate((rewards, np.ones_like(rewards) / self.N_expert), axis=0)
         else:
           if self.optimize_memory_usage:
               next_obs = self._normalize_obs(self.observations[(batch_inds + 1) % self.buffer_size, 0, :], env)
@@ -118,9 +129,12 @@ class AdRILReplayBuffer(ReplayBuffer):
           # AdRIL Rewards (indicator kernel)
           mask1 = (self.rewards[batch_inds] >= 0).astype(np.float32)
           mask2 = (self.rewards[batch_inds] < self.iter).astype(np.float32)
-          r1 = - (1. ** (-self.rewards[batch_inds]) / self.normalizer) * mask1 * mask2 # Past iter
+          r1 = - (1. ** (-self.rewards[batch_inds])) * mask1 * mask2 # Past iter
           r2 = np.zeros_like(self.rewards[batch_inds]) * mask1 * (1 - mask2) # current iter
-          r3 = -self.rewards[batch_inds] * (1 - mask1) # Expert
-          rewards = r1 + r2 + r3
+          r3 = -self.rewards[batch_inds] * (1 - mask1) / self.N_expert # Expert
+          if self.iter > 0:
+              rewards = (r1 * 1. / self.N_learner) + r2 + r3
+          else:
+              rewards = r1 + r2 + r3
         data = (obs, actions, next_obs, dones, rewards)
         return ReplayBufferSamples(*tuple(map(self.to_torch, data)))
