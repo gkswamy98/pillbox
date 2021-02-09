@@ -125,7 +125,8 @@ def train_sqil(env, n=0):
 
 
 def train_adril(env, n=0, balanced=False):
-    expert_data = make_sa_dataset(env, max_trajs=5)
+    num_trajs = 20
+    expert_data = make_sa_dataset(env, max_trajs=num_trajs)
     n_expert = len(expert_data["obs"])
     expert_sa = np.concatenate((expert_data["obs"], np.reshape(expert_data["acts"], (n_expert, -1))), axis=1)
 
@@ -141,7 +142,8 @@ def train_adril(env, n=0, balanced=False):
                         learning_rate=linear_schedule(7.3e-4), train_freq=64, gradient_steps=64, gamma=0.98, tau=0.02)
         model.replay_buffer = AdRILReplayBuffer(model.buffer_size, model.observation_space,
                                                model.action_space, model.device, 1,
-                                               model.optimize_memory_usage, expert_data=expert_data, balanced=balanced)
+                                               model.optimize_memory_usage, expert_data=expert_data, N_expert=num_trajs,
+                                               balanced=balanced)
         if not balanced:
             for j in range(len(expert_sa)):
                 obs = expert_data["obs"][j]
@@ -156,8 +158,9 @@ def train_adril(env, n=0, balanced=False):
                     model.learn(total_timesteps=1250, log_interval=1000)
                 else:
                     model.learn(total_timesteps=25000, log_interval=1000)
-                if train_steps % 1 == 0:
+                if train_steps % 1 == 0: # written to support more complex update schemes
                     model.replay_buffer.set_iter(train_steps)
+                    model.replay_buffer.set_n_learner(venv.num_trajs)
             
             # Evaluate policy
             if train_steps % 20 == 0:
