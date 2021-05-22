@@ -30,3 +30,13 @@ Run:
 jupyter notebook
 ```
 and open up vis.ipynb.
+
+## Citing our Work
+```
+@article{swamy2021moments,
+  author       = {Gokul Swamy, Sanjiban Choudhury, J. Andrew Bagnell, Zhiwei Steven Wu},
+  title        = {Of Moments and Matching: Trade-offs and Treatments in Imitation Learning},
+  conference   = {Proceedings of the 38th International Conference on Machine Learning},
+  url          = {https://arxiv.org/abs/2103.03236},
+}
+```
