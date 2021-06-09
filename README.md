@@ -24,12 +24,11 @@ This package supports training via:
 - GAIL
 - AdRIL
 
-We also support a comparison of the following algorithms that require an interactive expert:
+We also support a comparison of the following algorithms that require an interactive expert on both OpenAI Gym and a custom environment:
 - DAgger
 - DAeQuIL
 
-To explore these algorithms, 
-Run:
+To explore these algorithms and environments, run:
 ```bash
 jupyter notebook
 ```
