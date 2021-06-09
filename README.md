@@ -1,5 +1,5 @@
 # pillbox 💊
-Contains PyTorch implementation of the AdVIL and AdRIL algorithms.
+Contains PyTorch implementation of the AdVIL, AdRIL, and DAeQuIL algorithms.
 
 ## Setup
 To install dependencies, run:
