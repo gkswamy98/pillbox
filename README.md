@@ -24,6 +24,17 @@ This package supports training via:
 - GAIL
 - AdRIL
 
+We also support a comparison of the following algorithms that require an interactive expert:
+- DAgger
+- DAeQuIL
+
+To explore these algorithms, 
+Run:
+```bash
+jupyter notebook
+```
+and open up learners/imm.ipynb.
+
 ## Visualizing Results
 Run:
 ```bash
@@ -34,8 +45,8 @@ and open up vis.ipynb.
 ## Citing our Work
 ```
 @article{swamy2021moments,
-  author       = {Gokul Swamy, Sanjiban Choudhury, J. Andrew Bagnell, Zhiwei Steven Wu},
-  title        = {Of Moments and Matching: Trade-offs and Treatments in Imitation Learning},
+  author       = {Gokul Swamy and Sanjiban Choudhury and J. Andrew Bagnell and Zhiwei Steven Wu},
+  title        = {Of Moments and Matching: A Game-Theoretic Framework for Closing the Imitation Gap},
   conference   = {Proceedings of the 38th International Conference on Machine Learning},
   url          = {https://arxiv.org/abs/2103.03236},
 }
