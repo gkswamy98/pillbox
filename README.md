@@ -17,6 +17,16 @@ To train a learner, run:
 ```bash
 python learners/train.py -a algo_name -e env_name -n num_runs
 ```
+For "mimicmd" specifically:
+1. a. Determine whether to generate new BC simulated data or load existing [set bool 'load_d3']
+
+   b. Determine whether to train new query nets for the soft oracles or load bool [set param 'load_query']
+
+2. Run mimic-md with desired oracle [set 'distance_metric' param]
+```bash
+python learners/train.py -a "mimicmd" -e [env] -n [number of times]
+```
+
 This package supports training via:
 - Behavioral Cloning
 - AdVIL

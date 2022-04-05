@@ -42,7 +42,7 @@ def init_ortho(layer):
     if type(layer) == nn.Linear:
         nn.init.orthogonal_(layer.weight)
 
-        
+
 class AdVILPolicy(nn.Module):
     def __init__(self, env, mean=None, std=None):
         super(AdVILPolicy, self).__init__()

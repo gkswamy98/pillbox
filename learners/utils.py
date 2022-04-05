@@ -3,6 +3,35 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from itertools import chain
 from typing import Callable, Union, Type, Optional, Dict, Any
+from tqdm import tqdm
+from torch.autograd import Variable
+from itertools import repeat
+from torch.autograd import grad as torch_grad
+from typing import List, Type
+import types
+
+def gradient_penalty(learner_sa, expert_sa, f):
+    batch_size = expert_sa.size()[0]
+
+    alpha = torch.rand(batch_size, 1)
+    alpha = alpha.expand_as(expert_sa)
+
+    interpolated = alpha * expert_sa.data + (1 - alpha) * learner_sa.data
+
+    interpolated = Variable(interpolated, requires_grad=True)
+
+    f_interpolated = f(interpolated.float())
+
+    gradients = torch_grad(outputs=f_interpolated, inputs=interpolated,
+                           grad_outputs=torch.ones(f_interpolated.size()),
+                           create_graph=True, retain_graph=True)[0]
+
+    gradients = gradients.view(batch_size, -1)
+    norm = gradients.norm(2, dim=1).mean().item()
+
+    gradients_norm = torch.sqrt(torch.sum(gradients ** 2, dim=1) + 1e-12)
+    # 2 * |f'(x_0)|
+    return ((gradients_norm - 0.4) ** 2).mean()
 
 # From https://github.com/DLR-RM/rl-baselines3-zoo/blob/8ea4f4a87afa548832ca17e575b351ec5928c1b0/utils/utils.py
 def linear_schedule(initial_value: Union[float, str]) -> Callable[[float], float]:
@@ -47,22 +76,50 @@ class SADataset(torch.utils.data.Dataset):
         acts = self.acts[idx]
         sample = {'obs': obs, 'acts': acts}
         return sample
-                          
-def make_sa_dataloader(envname, max_trajs=None, normalize=True, batch_size=32):
-    demos = np.load(
-        "./experts/{0}/demos.npz".format(envname), allow_pickle=True)
+
+def make_sa_dataloader(envname, max_trajs=None, normalize=True, batch_size=32, raw=False, raw_traj=False, exp_len=False, rnd=False):
+    if not rnd:
+        demos = np.load(
+            "./experts/{0}/demos.npz".format(envname), allow_pickle=True)
+    else:
+        demos = np.load(
+            "rnd_data.npz", allow_pickle=True)
     num_trajs = demos["num_trajs"]
+    print(max_trajs)
     if max_trajs is None:
-        max_trajs = num_trajs
+        max_trajs = list(range(num_trajs))
+    if isinstance(max_trajs, int):
+        max_trajs = list(range(max_trajs))
     obs = []
     acts = []
-    for traj in range(min(max_trajs, num_trajs)):
+    trajectories = []
+    max_len = 0
+
+    #sometimes we only need the raw whole trajectories
+    if raw_traj:
+        for traj in max_trajs:
+            trajectories.append(demos[str(traj)].item())
+        return trajectories
+
+    for traj in max_trajs:
         obs.extend(demos[str(traj)].item()['states'])
         acts.extend(demos[str(traj)].item()['actions'])
+        max_len = max(max_len, len(demos[str(traj)].item()['states']))
+
+    #sometimes we only need the raw obs and acts
+    if raw:
+        return obs, acts
+
+    #iterable for learning
     dataset = SADataset(obs, acts, normalize)
     dataloader = DataLoader(dataset, batch_size=batch_size,
                              shuffle=True, num_workers=0)
     return dataloader
+
+def fetch_dataset_size(envname):
+    demos = np.load(
+        "./experts/{0}/demos.npz".format(envname), allow_pickle=True)
+    return demos["num_trajs"]
 
 class SADSDataset(torch.utils.data.Dataset):
     def __init__(self, obs, acts, next_obs, traj_lens):
@@ -107,7 +164,7 @@ def make_sads_dataloader(envname, max_trajs=None):
     return dataloader
 
 def make_sa_dataset(envname, max_trajs=None):
-    demos = np.load("../pillbox/experts/{0}/demos.npz".format(envname), allow_pickle=True)
+    demos = np.load("./experts/{0}/demos.npz".format(envname), allow_pickle=True)
     num_trajs = demos["num_trajs"]
     if max_trajs is None:
         max_trajs = num_trajs
