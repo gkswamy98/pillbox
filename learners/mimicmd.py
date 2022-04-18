@@ -16,13 +16,6 @@ from stable_baselines3.common.running_mean_std import RunningMeanStd
 from torch.nn import functional as F
 import torch
 from torch import nn
-from rlkit.policies.base import Policy
-from rlkit.pythonplusplus import identity
-from rlkit.torch import pytorch_util as ptu
-from rlkit.torch.core import PyTorchModule, eval_np
-from rlkit.torch.data_management.normalizer import TorchFixedNormalizer
-from rlkit.torch.networks import LayerNorm
-from rlkit.torch.pytorch_util import activation_from_string
 from stable_baselines3.common.preprocessing import get_action_dim, get_obs_shape
 from stable_baselines3.common.type_aliases import ReplayBufferSamples, RolloutBufferSamples
 from stable_baselines3.common.vec_env import VecNormalize

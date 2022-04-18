@@ -228,7 +228,7 @@ def train_mimicmd(env, n=0, bc_steps=0):
 
     #parameters
     #choose from ["ensemble", "rnd", "expert", "maxdist"]
-    distance_metric = "rnd"
+    distance_metric = "ensemble"
 
     #beta is used for the sigmoid function, this needs to be tuned for each new set of expert dems and generated bc data
     beta = 0.1
@@ -249,7 +249,7 @@ def train_mimicmd(env, n=0, bc_steps=0):
     inner_steps = 2
 
     num_traj_sample = 4
-    batch_size = 512
+    batch_size = 2
     learn_rate = 8e-5
     bc_steps = 10e5
 

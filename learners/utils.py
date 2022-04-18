@@ -85,7 +85,6 @@ def make_sa_dataloader(envname, max_trajs=None, normalize=True, batch_size=32, r
         demos = np.load(
             "rnd_data.npz", allow_pickle=True)
     num_trajs = demos["num_trajs"]
-    print(max_trajs)
     if max_trajs is None:
         max_trajs = list(range(num_trajs))
     if isinstance(max_trajs, int):

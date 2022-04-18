@@ -1,11 +1,13 @@
 # pillbox 💊
-Contains PyTorch implementation of the AdVIL, AdRIL, and DAeQuIL algorithms.
+Contains PyTorch implementation of the MIMIC(Replay Estimation), AdVIL, AdRIL, and DAeQuIL algorithms.
 
 ## Setup
 To install dependencies, run:
 ```bash
 conda env create -f environment.yml
 ```
+
+In addition, for mimic (replay estimation), there were some added packages all listed in the req.txt file. After creating the conda environment, install those necessary in that file [where necessary] to run this algorithm
 
 ## Running Experiments
 To train an expert, run:
