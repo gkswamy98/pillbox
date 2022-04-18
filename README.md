@@ -14,7 +14,7 @@ This repo also relies on a modified stablesbaselines3 (https://github.com/DLR-RM
 ```stable_baselines3```
 into the file named learners.
 
-The path should look as follows
+The folder structure should then look as follows
 - experts
 - learners
    - stable_baselines3
