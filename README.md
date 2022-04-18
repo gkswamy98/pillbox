@@ -9,6 +9,21 @@ conda env create -f environment.yml
 
 In addition, for mimic (replay estimation), there were some added packages all listed in the req.txt file. After creating the conda environment, install those necessary in that file [where necessary] to run this algorithm
 
+### Adding in Submodule
+This repo also relies on a modified stablesbaselines3 (https://github.com/DLR-RM/stable-baselines3) repo. Within this repo, download/clone the contents then add the file named
+```stable_baselines3```
+into the file named learners.
+
+The path should look as follows
+- experts
+- learners
+   - stable_baselines3
+   - [other contents of learners folder]
+- .gitignore
+- README
+- environment.yml
+- vis.ipynb
+
 ## Running Experiments
 To train an expert, run:
 ```bash
