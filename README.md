@@ -1,11 +1,28 @@
 # pillbox 💊
-Contains PyTorch implementation of the AdVIL, AdRIL, and DAeQuIL algorithms.
+Contains PyTorch implementation of the MIMIC(Replay Estimation), AdVIL, AdRIL, and DAeQuIL algorithms.
 
 ## Setup
 To install dependencies, run:
 ```bash
 conda env create -f environment.yml
 ```
+
+In addition, for mimic (replay estimation), there were some added packages all listed in the req.txt file. After creating the conda environment, install those necessary in that file [where necessary] to run this algorithm
+
+### Adding in Submodule
+This repo also relies on a modified stablesbaselines3 (https://github.com/DLR-RM/stable-baselines3) repo. Within this repo, download/clone the contents then add the file named
+```stable_baselines3```
+into the file named learners.
+
+The folder structure should then look as follows
+- experts
+- learners
+   - stable_baselines3
+   - [other contents of learners folder]
+- .gitignore
+- README
+- environment.yml
+- vis.ipynb
 
 ## Running Experiments
 To train an expert, run:
@@ -17,6 +34,16 @@ To train a learner, run:
 ```bash
 python learners/train.py -a algo_name -e env_name -n num_runs
 ```
+For "mimicmd" specifically:
+1. a. Determine whether to generate new BC simulated data or load existing [set bool 'load_d3']
+
+   b. Determine whether to train new query nets for the soft oracles or load bool [set param 'load_query']
+
+2. Run mimic-md with desired oracle [set 'distance_metric' param]
+```bash
+python learners/train.py -a "mimicmd" -e [env] -n [number of times]
+```
+
 This package supports training via:
 - Behavioral Cloning
 - AdVIL

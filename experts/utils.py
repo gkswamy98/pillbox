@@ -5,6 +5,27 @@ from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecEnv
 import os
 
+# Uncomment the following to add noise and add the wrapper to make_vec_env
+# class BasicWrapper(gym.Wrapper):
+#     def __init__(self, env):
+#         super().__init__(env)
+#         self.env = env
+
+#     def step(self, action):
+
+#         action = np.add(action,
+#         [np.random.normal(loc=0, scale=0.5),
+#         np.random.normal(loc=0, scale=0.5) ,
+#         np.random.normal(loc=0, scale=0.5),
+#         np.random.normal(loc=0, scale=0.5),
+#         np.random.normal(loc=0, scale=0.5),
+#         np.random.normal(loc=0, scale=0.5)]
+#         )
+
+#         next_state, reward, done, info = self.env.step(action)
+
+#         return next_state, reward, done, info
+
 # From https://github.com/DLR-RM/rl-baselines3-zoo/blob/8ea4f4a87afa548832ca17e575b351ec5928c1b0/utils/utils.py
 def linear_schedule(initial_value: Union[float, str]) -> Callable[[float], float]:
     """
